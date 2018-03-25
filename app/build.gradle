@@ -1,0 +1,62 @@
+ext {
+    WEARABLE_SUPPORT_LIBRARY_VERSION = "2.2.0"
+}
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+repositories {
+    google()
+}
+
+android {
+    compileSdkVersion 27
+    buildToolsVersion "27.0.3"
+
+    defaultConfig {
+        applicationId "com.farmerbb.wearoddsnends"
+        minSdkVersion 26
+        targetSdkVersion 27
+
+        versionCode 1
+        versionName "1.0"
+
+        resConfigs "en"
+    }
+
+    signingConfigs {
+        release {
+            if(System.getenv("KSTOREFILE") != null)
+                storeFile file(System.getenv("KSTOREFILE"))
+
+            storePassword System.getenv("KSTOREPWD")
+            keyAlias System.getenv("KEYALIAS")
+            keyPassword System.getenv("KEYPWD")
+        }
+    }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+            manifestPlaceholders = [appName: "@string/app_name_debug"]
+        }
+
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+            manifestPlaceholders = [appName: "@string/app_name"]
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    compileOnly "com.google.android.wearable:wearable:$WEARABLE_SUPPORT_LIBRARY_VERSION"
+    implementation "com.google.android.support:wearable:$WEARABLE_SUPPORT_LIBRARY_VERSION"
+    implementation 'joda-time:joda-time:2.9.9'
+    implementation 'org.joda:joda-convert:1.3.1'
+}
