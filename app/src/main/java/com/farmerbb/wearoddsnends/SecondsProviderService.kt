@@ -27,6 +27,7 @@ import android.support.wearable.complications.ProviderUpdateRequester
 import org.joda.time.DateTime
 
 import java.util.Locale
+import android.app.ActivityManager
 
 class SecondsProviderService: ComplicationProviderService() {
 
@@ -43,14 +44,25 @@ class SecondsProviderService: ComplicationProviderService() {
         manager.updateComplicationData(complicationId, data)
 
         val delay = now.withMillisOfSecond(0).millis - now.minusSeconds(1).millis
-        val pms = getSystemService(PowerManager::class.java)
-
-        if(pms.isInteractive) {
+        if(shouldRequestUpdate()) {
             Handler().postDelayed({
                 val provider = ComponentName(this, javaClass)
                 val requester = ProviderUpdateRequester(this, provider)
                 requester.requestUpdateAll()
             }, delay)
         }
+    }
+
+    @Suppress("deprecation")
+    private fun shouldRequestUpdate(): Boolean {
+        val pms = getSystemService(PowerManager::class.java)
+        val manager = getSystemService(ActivityManager::class.java)
+
+        for(service in manager.getRunningServices(Int.MAX_VALUE)) {
+            if(NotificationService::class.java.name == service.service.className)
+                return pms.isInteractive
+        }
+
+        return true
     }
 }

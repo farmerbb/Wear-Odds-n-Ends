@@ -22,7 +22,12 @@ import android.content.Intent
 class BootReceiver: BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        if(Intent.ACTION_BOOT_COMPLETED == intent.action)
-            context.startForegroundService(Intent(context, NotificationService::class.java))
+        when(intent.action) {
+            Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED -> {
+                if(context.getSharedPreferences("prefs", Context.MODE_PRIVATE)
+                                .getBoolean("return_to_home_screen_enabled", false))
+                    context.startForegroundService(Intent(context, NotificationService::class.java))
+            }
+        }
     }
 }

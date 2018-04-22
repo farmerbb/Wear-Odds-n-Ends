@@ -15,21 +15,99 @@
 
 package com.farmerbb.wearoddsnends
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.content.pm.PackageManager
 import android.content.ComponentName
+import android.content.Context
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
+import android.support.wearable.activity.WearableActivity
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Switch
+import android.widget.TextView
+import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity: Activity() {
+class MainActivity: WearableActivity() {
+
+    inner class PreferenceAdapter(val dataset: List<Preference>): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int)
+                = object: RecyclerView.ViewHolder(View.inflate(this@MainActivity, R.layout.row, null)) {}
+
+        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+            val pref = dataset[position]
+            val view = holder.itemView
+
+            val prefLabel = view.findViewById<TextView>(R.id.pref_label)
+            prefLabel.setText(pref.stringResId)
+
+            val prefSwitch = view.findViewById<Switch>(R.id.pref_switch)
+            prefSwitch.isChecked = getSharedPreferences("prefs", Context.MODE_PRIVATE)
+                    .getBoolean(pref.key, pref.defaultValue)
+            prefSwitch.setOnCheckedChangeListener { _, isChecked -> pref.onPrefChanged(isChecked) }
+        }
+
+        override fun getItemCount() = dataset.size
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        startForegroundService(Intent(this, NotificationService::class.java))
+        setContentView(R.layout.activity_main)
 
-        packageManager.setComponentEnabledSetting(ComponentName(this, javaClass),
-                PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP)
+        recyclerView.setHasFixedSize(false)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = PreferenceAdapter(arrayListOf(
+                Preference(
+                        "seconds_complication_enabled",
+                        R.string.enable_seconds_complication,
+                        true,
+                        { enabled -> onSecondsComplicationPrefChanged(enabled) }
+                ),
+                Preference(
+                        "no_data_complication_enabled",
+                        R.string.enable_no_data_complication,
+                        false,
+                        { enabled -> onNoDataComplicationPrefChanged(enabled) }
+                ),
+                Preference(
+                        "return_to_home_screen_enabled",
+                        R.string.enable_return_to_home_screen,
+                        false,
+                        { enabled -> onReturnToHomeScreenPrefChanged(enabled) }
+                )
+        ))
+    }
 
-        finish()
+    class Preference(val key: String,
+                     val stringResId: Int,
+                     val defaultValue: Boolean,
+                     val onPrefChanged: (Boolean) -> Unit)
+
+    private fun onSecondsComplicationPrefChanged(enabled: Boolean) =
+            packageManager.setComponentEnabledSetting(
+                    ComponentName(this, SecondsProviderService::class.java),
+                    if(enabled)
+                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                    else
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP
+            )
+
+    private fun onNoDataComplicationPrefChanged(enabled: Boolean) =
+            packageManager.setComponentEnabledSetting(
+                    ComponentName(this, NoDataProviderService::class.java),
+                    if(enabled)
+                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                    else
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP
+            )
+
+    private fun onReturnToHomeScreenPrefChanged(enabled: Boolean) {
+        if(enabled)
+            startForegroundService(Intent(this, NotificationService::class.java))
+        else
+            stopService(Intent(this, NotificationService::class.java))
     }
 }
