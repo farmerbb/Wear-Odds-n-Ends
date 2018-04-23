@@ -19,8 +19,7 @@
     <string name="app_name_debug">Wear Odds &amp; Ends (Debug)</string>
     <string name="no_data_label">No Data</string>
     <string name="short_text_label">Seconds &amp; day of week</string>
-    <string name="service_started">Service started</string>
-    <string name="service_is_running">Service is running</string>
+    <string name="service_is_running">Service is running\n\nTurn notification off in Wear OS settings</string>
     <string name="enable_seconds_complication">Enable seconds / day of week complication</string>
     <string name="enable_no_data_complication">Enable no data (dummy) complication</string>
     <string name="enable_return_to_home_screen">Return to watch face when screen turns off</string>

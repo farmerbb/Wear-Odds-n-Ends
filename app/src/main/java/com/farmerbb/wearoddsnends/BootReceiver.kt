@@ -24,8 +24,8 @@ class BootReceiver: BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         when(intent.action) {
             Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED -> {
-                if(context.getSharedPreferences("prefs", Context.MODE_PRIVATE)
-                                .getBoolean("return_to_home_screen_enabled", false))
+                val sharedPrefs = context.getSharedPreferences("prefs", Context.MODE_PRIVATE)
+                if(sharedPrefs.getBoolean("return_to_home_screen_enabled", false))
                     context.startForegroundService(Intent(context, NotificationService::class.java))
             }
         }

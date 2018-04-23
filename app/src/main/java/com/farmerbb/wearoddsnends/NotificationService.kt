@@ -21,6 +21,7 @@ import android.support.v4.app.NotificationCompat
 import android.support.wearable.complications.ProviderUpdateRequester
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.support.v4.content.ContextCompat
 
 class NotificationService: Service() {
     private val screenOffReceiver: BroadcastReceiver = object: BroadcastReceiver() {
@@ -59,6 +60,7 @@ class NotificationService: Service() {
                 .setSmallIcon(R.drawable.ic_watch_black_24dp)
                 .setContentTitle(name)
                 .setContentText(getString(R.string.service_is_running))
+                .setColor(ContextCompat.getColor(this, R.color.ic_launcher_background))
                 .setShowWhen(false)
                 .setOngoing(true)
 

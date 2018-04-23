@@ -20,6 +20,8 @@ import android.os.Bundle
 import android.content.pm.PackageManager
 import android.content.ComponentName
 import android.content.Context
+import android.content.SharedPreferences
+import android.graphics.Rect
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.wearable.activity.WearableActivity
@@ -30,6 +32,8 @@ import android.widget.TextView
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity: WearableActivity() {
+
+    lateinit var sharedPrefs: SharedPreferences
 
     inner class PreferenceAdapter(val dataset: List<Preference>): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int)
@@ -43,20 +47,38 @@ class MainActivity: WearableActivity() {
             prefLabel.setText(pref.stringResId)
 
             val prefSwitch = view.findViewById<Switch>(R.id.pref_switch)
-            prefSwitch.isChecked = getSharedPreferences("prefs", Context.MODE_PRIVATE)
-                    .getBoolean(pref.key, pref.defaultValue)
-            prefSwitch.setOnCheckedChangeListener { _, isChecked -> pref.onPrefChanged(isChecked) }
+            prefSwitch.isChecked = sharedPrefs.getBoolean(pref.key, pref.defaultValue)
+            prefSwitch.setOnCheckedChangeListener { _, isChecked ->
+                pref.onPrefChanged(isChecked)
+                sharedPrefs.edit().putBoolean(pref.key, isChecked).apply()
+            }
         }
 
         override fun getItemCount() = dataset.size
+    }
+
+    inner class TopBottomPaddingDecoration: RecyclerView.ItemDecoration() {
+        override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State?) {
+            val padding = resources.getDimensionPixelSize(R.dimen.top_bottom_recyclerview_padding)
+
+            when(parent.getChildAdapterPosition(view)) {
+                0 -> outRect.top = padding
+                parent.adapter.itemCount -1 -> outRect.bottom = padding
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        sharedPrefs = getSharedPreferences("prefs", Context.MODE_PRIVATE)
+        if(sharedPrefs.getBoolean("return_to_home_screen_enabled", false))
+            startForegroundService(Intent(this, NotificationService::class.java))
+
         recyclerView.setHasFixedSize(false)
         recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.addItemDecoration(TopBottomPaddingDecoration())
         recyclerView.adapter = PreferenceAdapter(arrayListOf(
                 Preference(
                         "seconds_complication_enabled",
