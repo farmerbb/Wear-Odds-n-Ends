@@ -57,10 +57,9 @@ class NotificationService: Service() {
         notificationManager.createNotificationChannel(NotificationChannel("channel", name, importance))
 
         val builder = NotificationCompat.Builder(this, "channel")
-                .setSmallIcon(R.drawable.ic_watch_black_24dp)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(name)
                 .setContentText(getString(R.string.service_is_running))
-                .setColor(ContextCompat.getColor(this, R.color.ic_launcher_background))
                 .setShowWhen(false)
                 .setOngoing(true)
 
