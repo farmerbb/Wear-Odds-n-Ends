@@ -32,7 +32,9 @@ import android.app.ActivityManager
 class SecondsProviderService: ComplicationProviderService() {
 
     override fun onComplicationUpdate(complicationId: Int, type: Int, manager: ComplicationManager) {
-        val now = DateTime.now().plusSeconds(1)
+        val sharedPrefs = getSharedPreferences("prefs", MODE_PRIVATE)
+        val offset = if(sharedPrefs.getBoolean("offset_seconds", false)) 1 else 0
+        val now = DateTime.now().plusSeconds(offset)
         val weekday = resources.getStringArray(R.array.days_of_week)[now.dayOfWeek - 1]
 
         val seconds = ":${String.format(Locale.US, "%02d", now.secondOfMinute)}"
@@ -58,11 +60,8 @@ class SecondsProviderService: ComplicationProviderService() {
         val pms = getSystemService(PowerManager::class.java)
         val manager = getSystemService(ActivityManager::class.java)
 
-        for(service in manager.getRunningServices(Int.MAX_VALUE)) {
-            if(NotificationService::class.java.name == service.service.className)
-                return pms.isInteractive
-        }
-
-        return true
+        return if(manager.getRunningServices(Int.MAX_VALUE).any {
+            NotificationService::class.java.name == it.service.className
+        }) pms.isInteractive else true
     }
 }

@@ -97,6 +97,12 @@ class MainActivity: WearableActivity() {
                         R.string.enable_return_to_home_screen,
                         false,
                         { enabled -> onReturnToHomeScreenPrefChanged(enabled) }
+                ),
+                Preference(
+                        "offset_seconds",
+                        R.string.offset_seconds,
+                        false,
+                        { }
                 )
         ))
     }
