@@ -24,20 +24,20 @@ import android.support.wearable.complications.ComplicationProviderService
 import android.support.wearable.complications.ComplicationText
 import android.support.wearable.complications.ProviderUpdateRequester
 
-import org.joda.time.DateTime
-
+import java.time.LocalDateTime
 import java.util.Locale
 import android.app.ActivityManager
+import java.time.ZoneOffset
 
 class SecondsProviderService: ComplicationProviderService() {
 
     override fun onComplicationUpdate(complicationId: Int, type: Int, manager: ComplicationManager) {
         val sharedPrefs = getSharedPreferences("prefs", MODE_PRIVATE)
-        val offset = if(sharedPrefs.getBoolean("offset_seconds", false)) 1 else 0
-        val now = DateTime.now().plusSeconds(offset)
-        val weekday = resources.getStringArray(R.array.days_of_week)[now.dayOfWeek - 1]
+        val offset = if(sharedPrefs.getBoolean("offset_seconds", false)) 1L else 0
+        val now = LocalDateTime.now().plusSeconds(offset)
+        val weekday = resources.getStringArray(R.array.days_of_week)[now.dayOfWeek.ordinal]
 
-        val seconds = ":${String.format(Locale.US, "%02d", now.secondOfMinute)}"
+        val seconds = ":${String.format(Locale.US, "%02d", now.second)}"
         val data = ComplicationData.Builder(type)
                 .setShortText(ComplicationText.plainText(seconds))
                 .setShortTitle(ComplicationText.plainText(weekday))
@@ -45,23 +45,24 @@ class SecondsProviderService: ComplicationProviderService() {
 
         manager.updateComplicationData(complicationId, data)
 
-        val delay = now.withMillisOfSecond(0).millis - now.minusSeconds(1).millis
+        val nextUpdate = now.withNano(0).plusSeconds(1).toEpochSecond(ZoneOffset.UTC)
+        val nowEpoch = now.toEpochSecond(ZoneOffset.UTC)
         if(shouldRequestUpdate()) {
             Handler().postDelayed({
                 val provider = ComponentName(this, javaClass)
                 val requester = ProviderUpdateRequester(this, provider)
                 requester.requestUpdateAll()
-            }, delay)
+            }, nextUpdate - nowEpoch)
         }
     }
 
     @Suppress("deprecation")
     private fun shouldRequestUpdate(): Boolean {
-        val pms = getSystemService(PowerManager::class.java)
-        val manager = getSystemService(ActivityManager::class.java)
+        val powerManager = getSystemService(PowerManager::class.java)
+        val activityManager = getSystemService(ActivityManager::class.java)
 
-        return if(manager.getRunningServices(Int.MAX_VALUE).any {
+        return if(activityManager.getRunningServices(Int.MAX_VALUE).any {
             NotificationService::class.java.name == it.service.className
-        }) pms.isInteractive else true
+        }) powerManager.isInteractive else true
     }
 }
