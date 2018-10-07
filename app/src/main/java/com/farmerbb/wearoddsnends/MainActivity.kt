@@ -58,12 +58,12 @@ class MainActivity: WearableActivity() {
     }
 
     inner class TopBottomPaddingDecoration: RecyclerView.ItemDecoration() {
-        override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State?) {
+        override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
             val padding = resources.getDimensionPixelSize(R.dimen.top_bottom_recyclerview_padding)
 
             when(parent.getChildAdapterPosition(view)) {
                 0 -> outRect.top = padding
-                parent.adapter.itemCount -1 -> outRect.bottom = padding
+                parent.adapter?.itemCount?.minus(1) -> outRect.bottom = padding
             }
         }
     }
@@ -83,34 +83,40 @@ class MainActivity: WearableActivity() {
                 Preference(
                         "seconds_complication_enabled",
                         R.string.enable_seconds_complication,
-                        true,
-                        { enabled -> onSecondsComplicationPrefChanged(enabled) }
-                ),
+                        true
+                ) { enabled -> onSecondsComplicationPrefChanged(enabled) },
                 Preference(
                         "no_data_complication_enabled",
                         R.string.enable_no_data_complication,
-                        false,
-                        { enabled -> onNoDataComplicationPrefChanged(enabled) }
-                ),
+                        false
+                ) { enabled -> onNoDataComplicationPrefChanged(enabled) },
+                Preference(
+                        "disable_assistant",
+                        R.string.disable_assistant,
+                        false
+                ) { enabled -> onDisableAssistantPrefChanged(enabled) },
                 Preference(
                         "return_to_home_screen_enabled",
                         R.string.enable_return_to_home_screen,
-                        false,
-                        { enabled -> onReturnToHomeScreenPrefChanged(enabled) }
-                ),
+                        false
+                ) { enabled -> onReturnToHomeScreenPrefChanged(enabled) },
                 Preference(
                         "offset_seconds",
                         R.string.offset_seconds,
-                        false,
-                        { }
+                        false
                 )
         ))
+    }
+
+    override fun onStop() {
+        super.onStop()
+        finish()
     }
 
     class Preference(val key: String,
                      val stringResId: Int,
                      val defaultValue: Boolean,
-                     val onPrefChanged: (Boolean) -> Unit)
+                     val onPrefChanged: (Boolean) -> Unit = {})
 
     private fun onSecondsComplicationPrefChanged(enabled: Boolean) =
             packageManager.setComponentEnabledSetting(
@@ -125,6 +131,16 @@ class MainActivity: WearableActivity() {
     private fun onNoDataComplicationPrefChanged(enabled: Boolean) =
             packageManager.setComponentEnabledSetting(
                     ComponentName(this, NoDataProviderService::class.java),
+                    if(enabled)
+                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                    else
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP
+            )
+
+    private fun onDisableAssistantPrefChanged(enabled: Boolean) =
+            packageManager.setComponentEnabledSetting(
+                    ComponentName(this, AssistDisablerActivity::class.java),
                     if(enabled)
                         PackageManager.COMPONENT_ENABLED_STATE_ENABLED
                     else

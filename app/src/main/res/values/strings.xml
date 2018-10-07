@@ -24,6 +24,7 @@
     <string name="enable_no_data_complication">Enable no data (dummy) complication</string>
     <string name="enable_return_to_home_screen">Return to watch face when screen turns off</string>
     <string name="offset_seconds">Offset seconds (needed for ustwo watch faces)</string>
+    <string name="disable_assistant">Disable button long-press for Assistant</string>
 
     <string-array name="days_of_week">
         <item>MON</item>

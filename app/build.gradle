@@ -1,5 +1,5 @@
 ext {
-    SUPPORT_LIBRARY_VERSION = "27.1.1"
+    SUPPORT_LIBRARY_VERSION = "28.0.0"
     WEARABLE_SUPPORT_LIBRARY_VERSION = "2.3.0"
 }
 
@@ -12,16 +12,16 @@ repositories {
 }
 
 android {
-    compileSdkVersion 27
-    buildToolsVersion "27.0.3"
+    compileSdkVersion 28
+    buildToolsVersion "28.0.3"
 
     defaultConfig {
         applicationId "com.farmerbb.wearoddsnends"
         minSdkVersion 26
-        targetSdkVersion 27
+        targetSdkVersion 28
 
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 3
+        versionName "1.1"
 
         resConfigs "en"
     }
@@ -49,6 +49,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
             manifestPlaceholders = [appName: "@string/app_name"]
+
+            applicationVariants.all { variant ->
+                variant.outputs.all {
+                    outputFileName = "Wear Odds & Ends-${defaultConfig.versionName}.apk"
+                }
+            }
         }
     }
 }
